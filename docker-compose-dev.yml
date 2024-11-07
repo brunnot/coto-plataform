@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  cp-gtw-cache:
+    image: redis:7.4.1
+    container_name: gtw-redis-server
+    command: redis-server --save 20 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    networks:
+      - coto-plataform-network
+      
+######################################
+
+  cp-keycloak:
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: cp-keycloak
+    command:
+      - start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      KC_PROXY: edge
+      KC_DB: mysql
+      KC_DB_URL_HOST: cp-keycloak-db
+      KC_DB_URL_PORT: 3306
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HOSTNAME_STRICT_HTTP: "false"
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HTTPS_ENABLED: "false"
+      KC_PROXY_ADDRESS_FORWARDING: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME_DEBUG: "true"
+      KC_HTTP_RELATIVE_PATH: /auth
+    ports:
+      - "9090:8080"
+    networks:
+      - coto-plataform-network
+
+  cp-keycloak-db:
+    image: mysql:8.0.23
+    container_name: cp-keycloak-db
+    environment:
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: keycloak
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: keycloak
+    volumes:
+      - cp-keycloak-db:/var/lib/mysql
+    networks:
+      - coto-plataform-network
+
+ 
+volumes:
+  cp-keycloak-db:
+    driver: local
+
+networks:
+  coto-plataform-network:
+    driver: bridge

@@ -1,0 +1,18 @@
+server:
+   port: 8081
+
+spring:
+   application:
+      name: coto-first-api
+   security:
+      oauth2:
+         resourceserver:
+            jwt:
+               issuer-uri: http://127.0.0.1:9090/auth/realms/coto-plataform
+               jwk-set-uri: http://127.0.0.1:9090/auth/realms/coto-plataform/protocol/openid-connect/certs      
+logging:
+   level:
+      root: INFO
+   pattern:
+      console: '%d{"yyyy-MM-dd HH:mm:ss,SSS",UTC} [%-5p] [%-9.9t] %-30c{1}: %X{mdcData}%m%n'
+      file: '%d{"yyyy-MM-dd HH:mm:ss,SSS",UTC} [%-5p] [%-9.9t] %-30c{1}: %X{mdcData}%m%n'

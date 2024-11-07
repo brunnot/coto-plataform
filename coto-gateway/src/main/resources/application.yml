@@ -1,0 +1,43 @@
+server: 
+   port: 8080
+   
+spring:
+   application:
+      name: coto-gateway
+   main:
+      web-application-type: reactive
+      allow-bean-definition-overriding: true
+   cloud:
+      gateway:
+         filter:
+            request-rate-limiter:
+               deny-empty-key: true
+         routes:
+            - id: first-api
+              uri: ${FIRST_API_ADDR}
+              predicates:
+                 - Path=/v1/first/**
+              filters:
+                 - AddResponseHeader=Instance-ID, ${INSTANCE_ID:${random.value}}
+                 - name: RequestRateLimiter
+                   args:
+                      redis-rate-limiter.replenishRate: 10   # Número de requisições por segundo
+                      redis-rate-limiter.burstCapacity: 20   # Máximo de requisições no bucket
+                      redis-rate-limiter.denyEmptyKey: true
+                      key-resolver: "#{@clientIdKeyResolver}"
+   security:
+      oauth2:
+         resourceserver:
+            jwt:
+               issuer-uri: ${AUTH_SERVER_ADDR}/realms/${AUTH_SERVER_REALM}
+               jwk-set-uri: ${AUTH_SERVER_ADDR}/realms/${AUTH_SERVER_REALM}/protocol/openid-connect/certs
+   redis:
+      host: ${REDIS_SERVER_ADDR}
+      port: ${REDIS_SERVER_PORT}
+         
+logging:
+   level:
+      root: INFO
+   pattern:
+      console: '%d{"yyyy-MM-dd HH:mm:ss,SSS", UTC} [%-5p] [%-9.9t] %-30c{1}: %X{mdcData}%m%n'
+      file: '%d{"yyyy-MM-dd HH:mm:ss,SSS", UTC} [%-5p] [%-9.9t] %-30c{1}: %X{mdcData}%m%n'
